@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+<title>쓰다듬기</title>
+
+<style>
+    * {
+        margin: 0; padding: 0; box-sizing: border-box;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    body {
+        width: 100vw; height: 100vh;
+        overflow: hidden; background: white;
+        display: flex; justify-content: center; align-items: center;
+        cursor: none; font-family: sans-serif;
+        position: relative;
+    }
+
+    #container {
+        position: relative;
+        width: 100%; height: 100%;
+        display: flex; justify-content: center; align-items: center;
+        padding-top: 5vh;
+    }
+
+    #ikeWrap {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 900px;
+        height: auto;
+    }
+
+    #ike {
+        width: 100vw;
+        max-width: 500px;
+        height: auto;
+        display: block;
+        pointer-events: none;
+        will-change: transform;
+        z-index: 2;
+    }
+
+    #head {
+        position: absolute;
+        width: 70%; height: 35%;
+        top: 8%; left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
+    }
+
+    #hand {
+        position: fixed;
+        width: 45vw;
+        max-width: 350px;
+        left: -500px; top: -500px;
+        pointer-events: none; z-index: 9999;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+    }
+
+    .bubble {
+        position: fixed;
+        top: 9vh;
+        left: 50%;
+        transform: translateX(-50%) translateY(0);
+        background: white;
+        padding: 16px 32px;
+        border-radius: 25px;
+        font-size: 26px;
+        font-weight: bold;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        opacity: 0;
+        transition: 0.2s ease-out;
+        pointer-events: none;
+        z-index: 20000;
+        white-space: nowrap;
+        border: 2px solid #eee;
+    }
+
+    .bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 15px 12px 0;
+        border-style: solid;
+        border-color: white transparent transparent;
+        display: block;
+        width: 0;
+        z-index: 2;
+    }
+
+    .bubble::before {
+        content: '';
+        position: absolute;
+        bottom: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 17px 14px 0;
+        border-style: solid;
+        border-color: #eee transparent transparent;
+        display: block;
+        width: 0;
+        z-index: 1;
+    }
+
+    .bubble.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    .heart {
+        position: fixed;
+        font-size: 42px;
+        pointer-events: none;
+        animation: heartFloat 0.8s ease-out forwards;
+        z-index: 999;
+    }
+
+    @keyframes heartFloat {
+        from { opacity: 1; transform: translateY(0) scale(0.8); }
+        to { opacity: 0; transform: translateY(-160px) scale(1.4); }
+    }
+</style>
+</head>
+
+<body>
+
+<div id="container">
+    <div id="ikeWrap">
+        <div class="bubble" id="bubble">......</div>
+        <div id="head"></div>
+        <img src="./박진서.png" id="ike">
+    </div>
+</div>
+
+<img src="./손.png" id="hand">
+
+<script>
+    const hand = document.getElementById('hand');
+    const head = document.getElementById('head');
+    const ike = document.getElementById('ike');
+    const bubble = document.getElementById('bubble');
+
+    const texts = ['아 뭐하는데!!', '빨나꼴미~~', '고무땨!', '모찌모찌기모찌찌.'];
+
+    let isAnimating = false;
+    let lastBubbleTime = 0;
+
+    function performAction(x, y) {
+        hand.style.left = x + 'px';
+        hand.style.top = y + 'px';
+        const rect = head.getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            triggerPetting(x, y);
+        }
+    }
+
+    function triggerPetting(x, y) {
+        if (!isAnimating) {
+            isAnimating = true;
+            ike.animate([
+                { transform: 'scaleY(1) translateY(0)' },
+                { transform: 'scaleY(0.96) translateY(12px)' },
+                { transform: 'scaleY(1) translateY(0)' }
+            ], { duration: 250, easing: 'ease-in-out' }).onfinish = () => { isAnimating = false; };
+            createHeart(x, y);
+            showBubble();
+        }
+    }
+
+    function showBubble() {
+        const now = Date.now();
+        if (now - lastBubbleTime > 1800) {
+            bubble.innerText = texts[Math.floor(Math.random() * texts.length)];
+            bubble.classList.add('show');
+            lastBubbleTime = now;
+            setTimeout(() => { bubble.classList.remove('show'); }, 1200);
+        }
+    }
+
+    function createHeart(x, y) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        const hearts = ['♡', '♥', '❤'];
+        heart.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.left = x + (Math.random() * 60 - 30) + 'px';
+        heart.style.top = y + 'px';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 800);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        hand.style.opacity = '1';
+        performAction(e.clientX, e.clientY);
+        const rotate = e.movementX * 0.4;
+        hand.style.transform = `translate(-50%, -50%) rotate(${rotate}deg)`;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            performAction(touch.clientX, touch.clientY);
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            hand.style.opacity = '1';
+            performAction(touch.clientX, touch.clientY);
+        }
+    });
+
+    window.addEventListener('touchend', () => { hand.style.opacity = '0'; });
+</script>
+
+</body>
+</html>
